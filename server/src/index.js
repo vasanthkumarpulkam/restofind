@@ -17,6 +17,7 @@ const {
 } = require('./db');
 const { reverseGeocodeNominatim } = require('./geocode');
 const { fetchNearbyRestaurantsOSM } = require('./osm');
+const { reverseGeocodeGoogle, fetchNearbyRestaurantsGoogle } = require('./google');
 const {
   signAdminToken,
   verifyAdminCredentials,
@@ -46,7 +47,14 @@ function broadcastSse(eventName, payload) {
 }
 
 app.get('/api/health', (req, res) => {
-  res.json({ ok: true, now: Date.now() });
+  res.json({
+    ok: true,
+    now: Date.now(),
+    providers: {
+      geocoding: process.env.GOOGLE_MAPS_API_KEY ? 'google' : 'osm',
+      restaurants: process.env.GOOGLE_MAPS_API_KEY ? 'google' : 'osm',
+    },
+  });
 });
 
 app.post('/api/location', async (req, res) => {
@@ -66,7 +74,8 @@ app.post('/api/location', async (req, res) => {
 
   let place = null;
   try {
-    place = await reverseGeocodeNominatim({ lat, lng });
+    if (process.env.GOOGLE_MAPS_API_KEY) place = await reverseGeocodeGoogle({ lat, lng });
+    else place = await reverseGeocodeNominatim({ lat, lng });
   } catch (e) {
     place = { placeName: '', city: '', locality: '', road: '', country: '' };
   }
@@ -104,7 +113,9 @@ app.get('/api/restaurants', async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: 'Invalid query' });
 
   try {
-    const rows = await fetchNearbyRestaurantsOSM(parsed.data);
+    const rows = process.env.GOOGLE_MAPS_API_KEY
+      ? await fetchNearbyRestaurantsGoogle(parsed.data)
+      : await fetchNearbyRestaurantsOSM(parsed.data);
     res.json({ ok: true, restaurants: rows });
   } catch (e) {
     res.status(502).json({ error: 'Failed to fetch restaurants' });
