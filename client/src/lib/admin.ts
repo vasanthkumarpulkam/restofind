@@ -30,8 +30,7 @@ async function fetchAdminJson<T>(path: string, token: string, init?: RequestInit
     } catch {
       // ignore
     }
-    const err = new Error(msg)
-    ;(err as any).status = res.status
+    const err = new Error(msg, { cause: { status: res.status } })
     throw err
   }
   return (await res.json()) as T

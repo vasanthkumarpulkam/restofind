@@ -17,7 +17,7 @@ const iconUrl = new URL('leaflet/dist/images/marker-icon.png', import.meta.url).
 const shadowUrl = new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).toString()
 
 // Fix default marker icons in bundlers
-delete (L.Icon.Default.prototype as any)._getIconUrl
+delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl
 L.Icon.Default.mergeOptions({ iconRetinaUrl, iconUrl, shadowUrl })
 
 function fmtTs(tsMs: number) {
@@ -55,8 +55,11 @@ export default function AdminDashboard(props: {
       setLogs(l.logs)
       setLatestUsers(u.users)
       setAnalytics(a.analytics)
-    } catch (e: any) {
-      if (e?.status === 401 || e?.status === 403) {
+    } catch (e: unknown) {
+      const status = (
+        e instanceof Error ? (e.cause as unknown as { status?: number } | undefined)?.status : undefined
+      ) as number | undefined
+      if (status === 401 || status === 403) {
         props.onAuthError()
         return
       }
@@ -116,8 +119,11 @@ export default function AdminDashboard(props: {
     try {
       await adminPurgeLogs(props.token, days)
       await loadAll()
-    } catch (e: any) {
-      if (e?.status === 401 || e?.status === 403) {
+    } catch (e: unknown) {
+      const status = (
+        e instanceof Error ? (e.cause as unknown as { status?: number } | undefined)?.status : undefined
+      ) as number | undefined
+      if (status === 401 || status === 403) {
         props.onAuthError()
         return
       }
