@@ -7,3 +7,5 @@ client/dist/
 
 server/node_modules/
 server/data.sqlite
+server/data.sqlite-wal
+server/data.sqlite-shm
