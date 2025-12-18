@@ -1,26 +1,14 @@
 {
-  "name": "workspace",
-  "version": "1.0.0",
-  "description": "",
+  "name": "restofind",
   "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
-    "install:all": "npm --prefix server install && npm --prefix client install",
-    "dev": "concurrently -n server,client -c blue,green \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
-    "build": "npm --prefix client run build",
-    "start": "npm --prefix server run start"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/vasanthkumarpulkam/restofind.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/vasanthkumarpulkam/restofind/issues"
-  },
-  "homepage": "https://github.com/vasanthkumarpulkam/restofind#readme",
-  "devDependencies": {
-    "concurrently": "^9.2.1"
+    "dev": "npm run -w @restofind/api dev & npm run -w @restofind/web dev",
+    "dev:api": "npm run -w @restofind/api dev",
+    "dev:web": "npm run -w @restofind/web dev",
+    "build": "npm run -w @restofind/api build && npm run -w @restofind/web build",
+    "lint": "npm run -w @restofind/api lint && npm run -w @restofind/web lint"
   }
 }

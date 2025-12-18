@@ -1,11 +1,16 @@
-node_modules/
-dist/
+node_modules
 .env
+.env.*
+dist
+build
+coverage
+.vite
+.DS_Store
 
-client/node_modules/
-client/dist/
-
-server/node_modules/
+# Legacy (non-workspace) folders on feature branch
+client/node_modules
+client/dist
+server/node_modules
 server/data.sqlite
 server/data.sqlite-wal
 server/data.sqlite-shm
