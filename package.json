@@ -1,0 +1,14 @@
+{
+  "name": "restofind",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run -w @restofind/api dev & npm run -w @restofind/web dev",
+    "dev:api": "npm run -w @restofind/api dev",
+    "dev:web": "npm run -w @restofind/web dev",
+    "build": "npm run -w @restofind/api build && npm run -w @restofind/web build",
+    "lint": "npm run -w @restofind/api lint && npm run -w @restofind/web lint"
+  }
+}
