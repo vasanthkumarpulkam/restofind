@@ -44,6 +44,11 @@ export function HomePage() {
 
   const coords = geo.status === 'ready' ? geo.coords : null
 
+  // Ask for location immediately on first load.
+  useEffect(() => {
+    if (geo.status === 'idle') request()
+  }, [geo.status, request])
+
   useEffect(() => {
     setError('')
   }, [geo.status])
@@ -65,8 +70,15 @@ export function HomePage() {
         })
 
         const pl = ping.place
-        const label = [pl?.road, pl?.neighbourhood, pl?.city, pl?.country].filter(Boolean).join(', ')
-        setPlaceLabel(label || pl?.displayName || '')
+        const city = pl?.city
+        const region = pl?.regionCode || pl?.region || pl?.locality
+        const country = pl?.countryCode || pl?.country
+        const preferred =
+          city && region
+            ? `${city}, ${region}`
+            : [pl?.road, pl?.neighbourhood, pl?.city, pl?.region, pl?.country].filter(Boolean).join(', ')
+        const label = preferred || pl?.displayName || country || ''
+        setPlaceLabel(label)
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Failed to log location')
       }
@@ -176,14 +188,17 @@ export function HomePage() {
                 <div className="mt-2">
                   <div className="text-base font-semibold text-slate-900">{placeLabel || 'Location captured'}</div>
                   <div className="mt-1 text-sm text-slate-600">
-                    Lat {coords?.lat.toFixed(6)}, Lng {coords?.lng.toFixed(6)}
-                    {coords?.accuracy != null ? ` • ±${Math.round(coords.accuracy)}m` : ''}
+                    {coords?.accuracy != null ? `±${Math.round(coords.accuracy)}m` : ''}
                   </div>
                 </div>
               ) : geo.status === 'error' ? (
                 <div className="mt-2 text-sm text-rose-700">{geo.message}</div>
               ) : (
-                <div className="mt-2 text-sm text-slate-600">We’ll ask your browser for exact GPS permission.</div>
+                <div className="mt-2 text-sm text-slate-600">
+                  {geo.status === 'requesting'
+                    ? 'Requesting location permission…'
+                    : 'We’ll ask your browser for exact GPS permission.'}
+                </div>
               )}
               {error ? <div className="mt-2 text-sm text-rose-700">{error}</div> : null}
             </div>

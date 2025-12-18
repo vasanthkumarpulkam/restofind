@@ -46,10 +46,13 @@ async function reverseGeocodeNominatim(lat: number, lng: number): Promise<Place>
     displayName: data.display_name,
     city: addr.city || addr.town || addr.village,
     locality: addr.suburb || addr.borough || addr.county,
+    region: addr.state || addr.region,
+    regionCode: addr.state_code,
     road: addr.road,
     neighbourhood: addr.neighbourhood,
     postcode: addr.postcode,
-    country: addr.country
+    country: addr.country,
+    countryCode: addr.country_code ? String(addr.country_code).toUpperCase() : undefined
   };
 }
 
@@ -65,15 +68,19 @@ async function reverseGeocodeGoogle(lat: number, lng: number): Promise<Place> {
   const first = data.results?.[0];
   const components: any[] = first?.address_components ?? [];
 
-  const get = (type: string) => components.find((c) => c.types?.includes(type))?.long_name;
+  const getLong = (type: string) => components.find((c) => c.types?.includes(type))?.long_name;
+  const getShort = (type: string) => components.find((c) => c.types?.includes(type))?.short_name;
 
   return {
     displayName: first?.formatted_address,
-    city: get('locality') || get('postal_town') || get('administrative_area_level_2'),
-    locality: get('sublocality') || get('neighborhood') || get('administrative_area_level_1'),
-    road: get('route'),
-    neighbourhood: get('neighborhood') || get('sublocality'),
-    postcode: get('postal_code'),
-    country: get('country')
+    city: getLong('locality') || getLong('postal_town') || getLong('administrative_area_level_2'),
+    locality: getLong('sublocality') || getLong('neighborhood'),
+    region: getLong('administrative_area_level_1'),
+    regionCode: getShort('administrative_area_level_1'),
+    road: getLong('route'),
+    neighbourhood: getLong('neighborhood') || getLong('sublocality'),
+    postcode: getLong('postal_code'),
+    country: getLong('country'),
+    countryCode: getShort('country')
   };
 }

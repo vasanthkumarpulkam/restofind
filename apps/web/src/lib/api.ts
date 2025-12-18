@@ -20,10 +20,13 @@ export type Place = {
   displayName?: string
   city?: string
   locality?: string
+  region?: string
+  regionCode?: string
   road?: string
   neighbourhood?: string
   postcode?: string
   country?: string
+  countryCode?: string
 }
 
 export type LocationPingResponse = {
