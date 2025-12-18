@@ -56,7 +56,9 @@ publicRouter.get('/restaurants/nearby', async (req, res) => {
     lat: z.coerce.number().min(-90).max(90),
     lng: z.coerce.number().min(-180).max(180),
     radiusMeters: z.coerce.number().int().positive().default(1500),
+    placeType: z.enum(['any', 'restaurant', 'cafe', 'fast_food']).default('any'),
     cuisine: z.string().optional(),
+    cuisines: z.string().optional(),
     maxDistanceMeters: z.coerce.number().int().positive().optional(),
     minRating: z.coerce.number().min(0).max(5).optional(),
     delivery: z.coerce.boolean().optional(),
@@ -68,7 +70,14 @@ publicRouter.get('/restaurants/nearby', async (req, res) => {
     return res.status(400).json({ error: 'invalid_query', details: parsed.error.flatten() });
   }
 
-  const restaurants = await getNearbyRestaurants(parsed.data);
+  const cuisines = parsed.data.cuisines
+    ? parsed.data.cuisines
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : undefined;
+
+  const restaurants = await getNearbyRestaurants({ ...parsed.data, cuisines });
   return res.json({ restaurants });
 });
 

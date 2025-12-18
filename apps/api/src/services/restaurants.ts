@@ -5,6 +5,7 @@ import { haversineMeters } from '../utils/distance.js';
 export type Restaurant = {
   id: string;
   name: string;
+  category?: 'restaurant' | 'cafe' | 'fast_food';
   cuisine?: string;
   rating?: number | null;
   isOpen?: boolean | null;
@@ -21,6 +22,8 @@ export type RestaurantQuery = {
   lng: number;
   radiusMeters: number;
   cuisine?: string;
+  cuisines?: string[];
+  placeType?: 'any' | 'restaurant' | 'cafe' | 'fast_food';
   maxDistanceMeters?: number;
   minRating?: number;
   delivery?: boolean;
@@ -30,12 +33,19 @@ export type RestaurantQuery = {
 export async function getNearbyRestaurants(q: RestaurantQuery): Promise<Restaurant[]> {
   const base = { lat: q.lat, lng: q.lng };
 
-  const raw = env.GOOGLE_MAPS_API_KEY
+  const canUseGoogle = Boolean(env.GOOGLE_MAPS_API_KEY) && (!q.placeType || q.placeType === 'any' || q.placeType === 'restaurant');
+  const raw = canUseGoogle
     ? await getNearbyRestaurantsGoogle(q).catch(() => getNearbyRestaurantsOsm(q))
     : await getNearbyRestaurantsOsm(q);
 
   const filtered = raw
     .filter((r) => (q.cuisine ? (r.cuisine ?? '').toLowerCase().includes(q.cuisine.toLowerCase()) : true))
+    .filter((r) =>
+      q.cuisines?.length
+        ? q.cuisines.some((c) => (r.cuisine ?? '').toLowerCase().includes(c.toLowerCase()))
+        : true
+    )
+    .filter((r) => (q.placeType && q.placeType !== 'any' ? r.category === q.placeType : true))
     .filter((r) => (q.maxDistanceMeters ? r.distanceMeters <= q.maxDistanceMeters : true))
     .filter((r) => (q.minRating != null ? (r.rating ?? -1) >= q.minRating : true))
     .filter((r) => (q.delivery != null ? (r.delivery ?? false) === q.delivery : true))
@@ -70,6 +80,7 @@ async function getNearbyRestaurantsGoogle(q: RestaurantQuery): Promise<Restauran
       return {
         id: `g:${r.place_id}`,
         name: r.name ?? 'Unknown',
+        category: 'restaurant',
         cuisine: undefined,
         rating: typeof r.rating === 'number' ? r.rating : null,
         isOpen: typeof r.opening_hours?.open_now === 'boolean' ? r.opening_hours.open_now : null,
@@ -87,12 +98,15 @@ async function getNearbyRestaurantsGoogle(q: RestaurantQuery): Promise<Restauran
 async function getNearbyRestaurantsOsm(q: RestaurantQuery): Promise<Restaurant[]> {
   const overpass = new URL('https://overpass-api.de/api/interpreter');
 
+  const amenityRe =
+    q.placeType && q.placeType !== 'any' ? `^(${q.placeType})$` : '^(restaurant|fast_food|cafe)$';
+
   const query = `
 [out:json][timeout:25];
 (
-  node["amenity"~"^(restaurant|fast_food|cafe)$"](around:${q.radiusMeters},${q.lat},${q.lng});
-  way["amenity"~"^(restaurant|fast_food|cafe)$"](around:${q.radiusMeters},${q.lat},${q.lng});
-  relation["amenity"~"^(restaurant|fast_food|cafe)$"](around:${q.radiusMeters},${q.lat},${q.lng});
+  node["amenity"~"${amenityRe}"](around:${q.radiusMeters},${q.lat},${q.lng});
+  way["amenity"~"${amenityRe}"](around:${q.radiusMeters},${q.lat},${q.lng});
+  relation["amenity"~"${amenityRe}"](around:${q.radiusMeters},${q.lat},${q.lng});
 );
 out center tags;
 `;
@@ -118,6 +132,10 @@ out center tags;
       if (typeof lat !== 'number' || typeof lng !== 'number') return null;
 
       const name = tags.name ?? 'Unnamed place';
+      const category =
+        tags.amenity === 'restaurant' || tags.amenity === 'cafe' || tags.amenity === 'fast_food'
+          ? (tags.amenity as 'restaurant' | 'cafe' | 'fast_food')
+          : undefined;
       const cuisine = typeof tags.cuisine === 'string' ? tags.cuisine.replace(/;/g, ', ') : undefined;
       const ohRaw = typeof tags.opening_hours === 'string' ? tags.opening_hours : undefined;
 
@@ -139,6 +157,7 @@ out center tags;
       return {
         id: `osm:${el.type}:${el.id}`,
         name,
+        category,
         cuisine,
         rating: null,
         isOpen,

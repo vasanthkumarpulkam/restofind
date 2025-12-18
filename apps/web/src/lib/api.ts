@@ -38,6 +38,7 @@ export type LocationPingResponse = {
 export type Restaurant = {
   id: string
   name: string
+  category?: 'restaurant' | 'cafe' | 'fast_food'
   cuisine?: string
   rating?: number | null
   isOpen?: boolean | null
@@ -98,7 +99,9 @@ export async function getNearbyRestaurants(params: {
   lat: number
   lng: number
   radiusMeters?: number
+  placeType?: 'any' | 'restaurant' | 'cafe' | 'fast_food'
   cuisine?: string
+  cuisines?: string[]
   maxDistanceMeters?: number
   minRating?: number
   delivery?: boolean
@@ -107,6 +110,11 @@ export async function getNearbyRestaurants(params: {
   const url = new URL(`${API_BASE}/restaurants/nearby`, window.location.origin)
   Object.entries(params).forEach(([k, v]) => {
     if (v == null || v === '') return
+    if (k === 'cuisines' && Array.isArray(v)) {
+      if (!v.length) return
+      url.searchParams.set('cuisines', v.join(','))
+      return
+    }
     url.searchParams.set(k, String(v))
   })
 
