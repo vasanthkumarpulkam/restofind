@@ -149,34 +149,92 @@ export function HomePage() {
 
   return (
     <div className="space-y-5">
+      {geo.status !== 'ready' ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg overflow-hidden rounded-2xl border bg-white shadow-xl">
+            <div className="bg-gradient-to-br from-indigo-600 via-indigo-600 to-fuchsia-600 px-5 py-6 text-white">
+              <div className="text-sm/5 text-indigo-50">RestoFind</div>
+              <div className="mt-1 text-2xl font-semibold tracking-tight">Find restaurants near you</div>
+              <div className="mt-2 text-sm text-indigo-50">
+                We’ll ask your browser for your exact location so we can show nearby restaurants by distance.
+              </div>
+            </div>
+
+            <div className="px-5 py-5">
+              {geo.status === 'requesting' ? (
+                <div className="flex items-start gap-3">
+                  <div
+                    className="mt-0.5 h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-indigo-600"
+                    aria-hidden="true"
+                  />
+                  <div>
+                    <div className="text-sm font-semibold text-slate-900">Requesting location permission…</div>
+                    <div className="mt-1 text-sm text-slate-600">
+                      If you don’t see a prompt, check your browser’s location settings.
+                    </div>
+                  </div>
+                </div>
+              ) : geo.status === 'error' ? (
+                <div>
+                  <div className="text-sm font-semibold text-rose-700">Location needed</div>
+                  <div className="mt-1 text-sm text-slate-700">{geo.message}</div>
+                  <button
+                    onClick={request}
+                    className="mt-4 w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                  >
+                    Try again
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <div className="text-sm font-semibold text-slate-900">Allow location access</div>
+                  <div className="mt-1 text-sm text-slate-600">
+                    Your browser will ask for permission. We only capture location after you consent.
+                  </div>
+                  <button
+                    onClick={request}
+                    className="mt-4 w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                  >
+                    Allow location
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <section className="overflow-hidden rounded-2xl border bg-white">
         <div className="bg-gradient-to-br from-indigo-600 via-indigo-600 to-fuchsia-600 px-5 py-6 text-white">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <div className="text-sm/5 text-indigo-50">Find what’s good near you</div>
-              <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Nearby food, instantly.</h1>
+              <div className="text-sm/5 text-indigo-50">Now showing</div>
+              <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
+                Restaurants near {placeLabel || 'you'}
+              </h1>
               <p className="mt-2 max-w-2xl text-sm text-indigo-50">
-                Enable location once, then browse nearby restaurants by distance and cuisine. We only capture GPS after you
-                consent.
+                Browse nearby restaurants sorted by distance. Filter by cuisine, rating, and delivery/pickup.
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={request}
-                className="rounded-lg bg-white/15 px-4 py-2 text-sm font-semibold text-white ring-1 ring-inset ring-white/30 hover:bg-white/20 disabled:opacity-60"
-                disabled={geo.status === 'requesting'}
-              >
-                {geo.status === 'requesting' ? 'Requesting…' : coords ? 'Update location' : 'Enable location'}
-              </button>
-              <button
-                onClick={() => void fetchRestaurants()}
-                className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-indigo-50 disabled:opacity-60"
-                disabled={!coords || loadingRestaurants}
-              >
-                {loadingRestaurants ? 'Loading…' : 'Refresh'}
-              </button>
-            </div>
+            {coords ? (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={request}
+                  className="rounded-lg bg-white/15 px-4 py-2 text-sm font-semibold text-white ring-1 ring-inset ring-white/30 hover:bg-white/20 disabled:opacity-60"
+                  disabled={geo.status === 'requesting'}
+                >
+                  {geo.status === 'requesting' ? 'Requesting…' : 'Update location'}
+                </button>
+                <button
+                  onClick={() => void fetchRestaurants()}
+                  className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-indigo-50 disabled:opacity-60"
+                  disabled={!coords || loadingRestaurants}
+                >
+                  {loadingRestaurants ? 'Loading…' : 'Refresh'}
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -197,7 +255,7 @@ export function HomePage() {
                 <div className="mt-2 text-sm text-slate-600">
                   {geo.status === 'requesting'
                     ? 'Requesting location permission…'
-                    : 'We’ll ask your browser for exact GPS permission.'}
+                    : 'Waiting for location permission…'}
                 </div>
               )}
               {error ? <div className="mt-2 text-sm text-rose-700">{error}</div> : null}
@@ -517,7 +575,7 @@ export function HomePage() {
 
             {!coords ? (
               <div className="rounded-2xl border bg-white p-4 text-sm text-slate-600">
-                Enable location to see places near you.
+                Waiting for location permission…
               </div>
             ) : null}
           </div>

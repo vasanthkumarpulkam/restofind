@@ -21,6 +21,5 @@ app.use('/api', publicRouter);
 app.use('/api', adminRouter);
 
 app.listen(env.PORT, () => {
-  // eslint-disable-next-line no-console
   console.log(`API listening on :${env.PORT}`);
 });

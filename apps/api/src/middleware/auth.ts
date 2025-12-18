@@ -7,11 +7,6 @@ export type AdminClaims = {
   role: 'admin';
 };
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __restofind: unknown;
-}
-
 declare module 'express-serve-static-core' {
   interface Request {
     admin?: AdminClaims;
