@@ -6,3 +6,11 @@ build
 coverage
 .vite
 .DS_Store
+
+# Legacy (non-workspace) folders on feature branch
+client/node_modules
+client/dist
+server/node_modules
+server/data.sqlite
+server/data.sqlite-wal
+server/data.sqlite-shm
