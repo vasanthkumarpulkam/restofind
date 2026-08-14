@@ -149,8 +149,6 @@ restofind/
 └── package.json    npm workspaces root
 ```
 
-> **Note:** the repository also contains legacy `client/` and `server/` directories from an earlier JavaScript implementation. They are not wired into the workspace scripts and are scheduled for removal — build from `apps/` only.
-
 ## API reference
 
 | Method | Endpoint | Auth | Description |
@@ -167,7 +165,7 @@ restofind/
 
 ## Roadmap
 
-- [ ] Delete the legacy `client/` and `server/` directories
+- [x] Delete the legacy `client/` and `server/` directories
 - [ ] Scheduled automatic retention purge
 - [ ] Rate limiting on the public location endpoint
 - [ ] Consent banner before the geolocation prompt
